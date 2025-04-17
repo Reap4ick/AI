@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 
 # csv read
-df = pd.read_csv('workspace\csv_files\orders_sample.csv')
+df = pd.read_csv('csv_files\orders_sample.csv')
 pd.set_option('display.max_columns', None)
 
 # 1
@@ -46,10 +46,13 @@ print(df)
 
 # 6
 print("\nOrders placed in the period from June 5 to June 10 inclusive:")
-for i in range(len(df["OrderDate"])):
-    if (pd.to_datetime(f"{df['OrderDate'][0].year}-06-05")) <= df['OrderDate'][i] <= (pd.to_datetime(f"{df['OrderDate'][0].year}-06-10")):
+for i in range(len(df)):
+    year = df['OrderDate'][i].year
+    date_from = pd.to_datetime(f"{year}-06-05")
+    date_to = pd.to_datetime(f"{year}-06-10")
+    
+    if date_from <= df['OrderDate'][i] <= date_to:
         print(f"{df['Customer'][i]} have {df['TotalAmount'][i]} orders price (OrderID: {df['OrderID'][i]})")
-
 # 7
 print("\nWorks with categories:")
 
