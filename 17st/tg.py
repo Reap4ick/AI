@@ -4,7 +4,7 @@ from telegram import Update, ReplyKeyboardRemove
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 from datetime import datetime
 
-TOKEN = "7874683003:AAFVUDU4qsqBwvSTcPVX7dd30Rmk3rJGb-c"  # 🔁 Заміни на свій
+TOKEN = "7874683003:AAFVUDU4qsqBwvSTcPVX7dd30Rmk3rJGb-c"
 
 def log_interaction(user_input, bot_response):
     with open("chat_log.txt", "a", encoding="utf-8") as f:
