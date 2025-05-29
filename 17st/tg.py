@@ -1,10 +1,11 @@
 import requests
-import re
 from telegram import Update, ReplyKeyboardRemove
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 from datetime import datetime
 
-TOKEN = "7874683003:AAFVUDU4qsqBwvSTcPVX7dd30Rmk3rJGb-c"  # 🔁 Заміни на свій
+TOKEN = "7874683003:AAFVUDU4qsqBwvSTcPVX7dd30Rmk3rJGb-c"
+
+user_states = {} 
 
 def log_interaction(user_input, bot_response):
     with open("chat_log.txt", "a", encoding="utf-8") as f:
@@ -14,7 +15,6 @@ def log_interaction(user_input, bot_response):
 
 def query_llama(prompt: str) -> str:
     payload = {
-        # "model": "deepseek-r1:14b",
         "model": "deepseek-r1:1.5b",
         "prompt": prompt,
         "stream": False,
@@ -30,22 +30,34 @@ def query_llama(prompt: str) -> str:
         return f"❌ Помилка підключення до Ollama API: {str(e)}"
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "Привіт! Напиши щось, і я відповім за допомогою нейромережі 🧠",
-    )
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_message = update.message.text
-    waiting_msg = await update.message.reply_text("🧠 Думаю...")
+    user_id = update.effective_user.id
+    user_states[user_id] = True
+    await update.message.reply_text("✅ Чат відновлено. Напиши щось, і я відповім 🧠")
 
+async def bye(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    user_states[user_id] = False
+    await update.message.reply_text("👋 Добре, зупиняю чат. Напиши /start, щоб відновити спілкування.")
+
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    user_message = update.message.text
+
+    if not user_states.get(user_id, True):
+        await update.message.reply_text("⏸️ Чат зупинено. Напиши /start, щоб продовжити.")
+        return
+
+    waiting_msg = await update.message.reply_text("🧠 Думаю...")
     raw_reply = query_llama(user_message)
     await waiting_msg.delete()
-    await update.message.reply_text(raw_reply , reply_markup=ReplyKeyboardRemove())
-    log_interaction(user_message, raw_reply )
+    await update.message.reply_text(raw_reply, reply_markup=ReplyKeyboardRemove())
+    log_interaction(user_message, raw_reply)
 
 def main():
     app = Application.builder().token(TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("bye", bye))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     print("✅ Бот запущений...")
